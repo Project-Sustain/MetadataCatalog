@@ -1,0 +1,9 @@
+[ {
+  "collection" : "timeTest2",
+  "fieldMetadata" : [ {
+    "name" : "startDate",
+    "type" : "STRING",
+    "minDate" : "2016-04-11",
+    "maxDate" : "2020-01-17"
+  } ]
+} ]
