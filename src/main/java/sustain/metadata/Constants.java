@@ -8,6 +8,7 @@ public class Constants {
     public final static String PROPERTY_KEY_MONGODB_HOST = "mongodb_host";
     public final static String PROPERTY_KEY_MONGODB_PORT = "mongodb_port";
     public final static String PROPERTY_KEY_MONGODB_DB = "mongodb_db";
+    public final static String PROPERTY_KEY_OUTPUT = "output";
 
     public final static String MAXIMUM_NUMBER = "Maximum";
     public final static String MINIMUM_NUMBER = "Minimum";

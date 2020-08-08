@@ -52,7 +52,7 @@ public class Analyzer {
                 // Creating Object of ObjectMapper define in Jakson Api
                 ObjectMapper objectMapper = new ObjectMapper();
 
-                writer = new FileWriter("./metadata.json");
+                writer = new FileWriter(PropertyLoader.getOutputPathAndName());
                 writer.write(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dbMetaData));
             }
         } catch (JsonProcessingException e) {
