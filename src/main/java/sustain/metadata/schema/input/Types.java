@@ -27,6 +27,8 @@ public class Types {
     private Long array;
     @JsonProperty("Number")
     private Long number;
+    @JsonProperty("Date")
+    private Long date;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -39,17 +41,18 @@ public class Types {
 
     /**
      *
+     * @param objectId
      * @param string
      * @param array
-     * @param objectId
      * @param number
+     * @param date
      */
-    public Types(Long objectId, Long string, Long array, Long number) {
-        super();
+    public Types(Long objectId, Long string, Long array, Long number, Long date) {
         this.objectId = objectId;
         this.string = string;
         this.array = array;
         this.number = number;
+        this.date = date;
     }
 
     @JsonProperty("ObjectId")
@@ -90,6 +93,16 @@ public class Types {
     @JsonProperty("Number")
     public void setNumber(Long number) {
         this.number = number;
+    }
+
+    @JsonProperty("Date")
+    public Long getDate() {
+        return date;
+    }
+
+    @JsonProperty("Date")
+    public void setDate(Long date) {
+        this.date = date;
     }
 
     @JsonAnyGetter

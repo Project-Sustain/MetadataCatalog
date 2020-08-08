@@ -65,6 +65,9 @@ public class Connector {
 
             if(dateField)
             {
+                // need to change the type of the field
+                fieldInfo.getValue().getTypes().setString(null);
+                fieldInfo.getValue().getTypes().setDate(1L);
                 getAndMapDateField(collectionName, fieldName, collectionMetaData, fieldInfo);
             }
             else
@@ -155,8 +158,19 @@ public class Connector {
     private void getAndMapNumericTypes(String collectionName, String fieldName, CollectionMetaData collectionMetaData, FieldInfo fieldInfo)
     {
         try {
-            Document resultDoc = getMinMax(collectionName, fieldName);
-            Mapper.mapNumericMetaInfo(collectionMetaData, resultDoc, fieldInfo);
+            List<Object> distinctIntegerValues = getDistinctIntegerValues(collectionName, fieldName);
+            if(distinctIntegerValues != null)
+            {
+//                fieldInfo.getValue().getTypes().setArray(1L);
+//                fieldInfo.getValue().getTypes().setNumber(null);
+                Mapper.mapCategoricalMetaInfo(collectionMetaData, distinctIntegerValues, fieldInfo);
+            }
+            else
+            {
+                Document resultDoc = getMinMax(collectionName, fieldName);
+                Mapper.mapNumericMetaInfo(collectionMetaData, resultDoc, fieldInfo);
+            }
+
         } catch (ValueNotFoundException e) {
             e.printStackTrace();
         }
@@ -164,7 +178,7 @@ public class Connector {
 
     private void getAndMapStringType(String collectionName, String fieldName, CollectionMetaData collectionMetaData, FieldInfo fieldInfo) {
         try {
-            List<String> distinctCategories = getDistinctCategories(collectionName, fieldName);
+            List<Object> distinctCategories = getDistinctCategories(collectionName, fieldName);
             Mapper.mapCategoricalMetaInfo(collectionMetaData, distinctCategories, fieldInfo);
         } catch (ValueNotFoundException e) {
             e.printStackTrace();
@@ -232,17 +246,61 @@ public class Connector {
         return doc;
     }
 
-    private List<String> getDistinctCategories(String collectionName, String fieldName) throws ValueNotFoundException {
+    private List<Object> getDistinctIntegerValues(String collectionName, String fieldName) throws ValueNotFoundException {
+        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
+        MongoCollection<Document> collection = database.getCollection(collectionName);
+        DistinctIterable<Integer> distinct = collection.distinct(fieldName, Integer.class);
+
+        MongoCursor<Integer> iterator = distinct.iterator();
+        List<Object> distinctIntegers = new ArrayList<>();
+
+        int count = 0;
+        // stop extracting the distinct values when it exceeds 25, because
+        // we're going to return null, if the list includes more than 20 elements
+        while (iterator.hasNext() && count<25)
+        {
+            Integer s = iterator.next();
+            distinctIntegers.add(s);
+//            System.out.println(s);
+            count++;
+        }
+
+        // if number of distinct integers are less than 20, we consider it as a categorical field
+        return distinctIntegers.size() <=20 ? distinctIntegers:  null;
+    }
+
+//    private List<Object> getDistinctDoubleValues(String collectionName, String fieldName) throws ValueNotFoundException {
+//        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
+//        MongoCollection<Document> collection = database.getCollection(collectionName);
+//        DistinctIterable<Double> distinct = collection.distinct(fieldName, Double.class);
+//
+//        MongoCursor<Double> iterator = distinct.iterator();
+//        List<Object> distinctIntegers = new ArrayList<>();
+//
+//        int count = 0;
+//        while (iterator.hasNext() && count <25)
+//        {
+//            Object s = iterator.next();
+//            distinctIntegers.add(s);
+////            System.out.println(s);
+//              count++;
+//        }
+//
+//        // if number of distinct integers are less than 20, we consider it as a categorical field
+//        return distinctIntegers.size() <=20 ? distinctIntegers:  null;
+//    }
+
+    private List<Object> getDistinctCategories(String collectionName, String fieldName) throws ValueNotFoundException {
         MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
         MongoCollection<Document> collection = database.getCollection(collectionName);
         DistinctIterable<String> distinct = collection.distinct(fieldName, String.class);
 
         MongoCursor<String> iterator = distinct.iterator();
-        List<String> categoriclaVals = new ArrayList<>();
+        List<Object> categoriclaVals = new ArrayList<>();
 
         while (iterator.hasNext())
         {
-            String s = iterator.next();
+            Object s = iterator.next();
             categoriclaVals.add(s);
 //            System.out.println(s);
         }

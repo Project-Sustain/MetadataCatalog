@@ -16,7 +16,7 @@ public class FieldMetadata {
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private double max;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    private List<String> values;
+    private List<Object> values;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private String minDate;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -25,7 +25,7 @@ public class FieldMetadata {
     public FieldMetadata() {
     }
 
-    public FieldMetadata(String name, Type type, double min, double max, List<String> values, String minDate, String maxDate) {
+    public FieldMetadata(String name, Type type, double min, double max, List<Object> values, String minDate, String maxDate) {
         this.name = name;
         this.type = type;
         this.min = min;
@@ -67,7 +67,7 @@ public class FieldMetadata {
         this.max = max;
     }
 
-    public List<String> getValues() {
+    public List<Object> getValues() {
         if(values == null)
         {
             values = new ArrayList<>();
@@ -75,7 +75,7 @@ public class FieldMetadata {
         return values;
     }
 
-    public void setValues(List<String> values) {
+    public void setValues(List<Object> values) {
         this.values = values;
     }
 

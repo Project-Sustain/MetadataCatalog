@@ -26,7 +26,7 @@ public class Mapper {
         collectionMetaData.getFieldMetadata().add(fieldMetadata);
     }
 
-    public static void mapCategoricalMetaInfo(CollectionMetaData collectionMetaData, List<String> distinctCategories, FieldInfo fieldInfo)
+    public static void mapCategoricalMetaInfo(CollectionMetaData collectionMetaData, List<Object> distinctCategories, FieldInfo fieldInfo)
     {
         FieldMetadata fieldMetadata = new FieldMetadata();
         fieldMetadata.setName(fieldInfo.getId().getKey());
@@ -63,6 +63,10 @@ public class Mapper {
         else if(type.getArray() != null)
         {
             return Type.ARRAY;
+        }
+        else if(type.getDate() != null)
+        {
+            return Type.DATE;
         }
         else
         {
