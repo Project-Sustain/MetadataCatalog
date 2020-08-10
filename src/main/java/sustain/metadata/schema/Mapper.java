@@ -23,11 +23,18 @@ public class Mapper {
         if(resultDoc.get(Constants.MAXIMUM_NUMBER) instanceof Integer)
         {
             fieldMetadata.setMax(((Integer) resultDoc.get(Constants.MAXIMUM_NUMBER)).doubleValue());
-            fieldMetadata.setMin(((Integer)resultDoc.get(Constants.MINIMUM_NUMBER)).doubleValue());
         }
         else
         {
             fieldMetadata.setMax((Double) resultDoc.get(Constants.MAXIMUM_NUMBER));
+        }
+
+        if(resultDoc.get(Constants.MINIMUM_NUMBER) instanceof Integer)
+        {
+            fieldMetadata.setMin(((Integer)resultDoc.get(Constants.MINIMUM_NUMBER)).doubleValue());
+        }
+        else
+        {
             fieldMetadata.setMin((Double) resultDoc.get(Constants.MINIMUM_NUMBER));
         }
 
