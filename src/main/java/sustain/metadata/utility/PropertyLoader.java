@@ -22,6 +22,7 @@ public class PropertyLoader {
         propertyValues.put(Constants.PROPERTY_KEY_MONGODB_DB, prop.getProperty("mongodb.db"));
         propertyValues.put(Constants.PROPERTY_KEY_OUTPUT, prop.getProperty("output"));
         propertyValues.put(Constants.PROPERTY_KEY_SPECIAL_NUMERIC_FIELDS, prop.getProperty("categorical.numeric.fields"));
+        propertyValues.put(Constants.PROPERTY_KEY_IGNORE_FIELDS, prop.getProperty("ignore.fields"));
 
     }
 
@@ -79,5 +80,17 @@ public class PropertyLoader {
         }
 
         throw new ValueNotFoundException("Special Numeric fields not found");
+    }
+
+    public static List<String> getIgnoredFields() throws ValueNotFoundException
+    {
+        String fields = propertyValues.get(Constants.PROPERTY_KEY_IGNORE_FIELDS);
+
+        if(fields != null)
+        {
+            return Arrays.asList(fields.split(","));
+        }
+
+        throw new ValueNotFoundException("Ignored fields not found");
     }
 }
