@@ -20,8 +20,16 @@ public class Mapper {
         FieldMetadata fieldMetadata = new FieldMetadata();
         fieldMetadata.setName(fieldInfo.getId().getKey());
         fieldMetadata.setType(getType(fieldInfo.getValue().getTypes()));
-        fieldMetadata.setMax((Double) resultDoc.get(Constants.MAXIMUM_NUMBER));
-        fieldMetadata.setMin((Double) resultDoc.get(Constants.MINIMUM_NUMBER));
+        if(resultDoc.get(Constants.MAXIMUM_NUMBER) instanceof Integer)
+        {
+            fieldMetadata.setMax(((Integer) resultDoc.get(Constants.MAXIMUM_NUMBER)).doubleValue());
+            fieldMetadata.setMin(((Integer)resultDoc.get(Constants.MINIMUM_NUMBER)).doubleValue());
+        }
+        else
+        {
+            fieldMetadata.setMax((Double) resultDoc.get(Constants.MAXIMUM_NUMBER));
+            fieldMetadata.setMin((Double) resultDoc.get(Constants.MINIMUM_NUMBER));
+        }
 
         collectionMetaData.getFieldMetadata().add(fieldMetadata);
     }
