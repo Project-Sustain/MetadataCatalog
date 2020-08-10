@@ -2,9 +2,8 @@ package sustain.metadata.utility;
 
 import sustain.metadata.Constants;
 import sustain.metadata.utility.exceptions.ValueNotFoundException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+
+import java.util.*;
 
 /**
  * Created by laksheenmendis on 7/31/20 at 12:21 AM
@@ -22,6 +21,7 @@ public class PropertyLoader {
         propertyValues.put(Constants.PROPERTY_KEY_MONGODB_PORT, prop.getProperty("mongodb.port"));
         propertyValues.put(Constants.PROPERTY_KEY_MONGODB_DB, prop.getProperty("mongodb.db"));
         propertyValues.put(Constants.PROPERTY_KEY_OUTPUT, prop.getProperty("output"));
+        propertyValues.put(Constants.PROPERTY_KEY_SPECIAL_NUMERIC_FIELDS, prop.getProperty("categorical.numeric.fields"));
 
     }
 
@@ -69,4 +69,15 @@ public class PropertyLoader {
         throw new ValueNotFoundException("Output path and name not found");
     }
 
+    public static List<String> getSpecialNumericFields() throws ValueNotFoundException
+    {
+        String fields = propertyValues.get(Constants.PROPERTY_KEY_SPECIAL_NUMERIC_FIELDS);
+
+        if(fields != null)
+        {
+            return Arrays.asList(fields.split(","));
+        }
+
+        throw new ValueNotFoundException("Special Numeric fields not found");
+    }
 }

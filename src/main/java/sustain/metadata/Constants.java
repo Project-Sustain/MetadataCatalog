@@ -13,6 +13,8 @@ public class Constants {
     public final static String MAXIMUM_NUMBER = "Maximum";
     public final static String MINIMUM_NUMBER = "Minimum";
 
+    public final static String PROPERTY_KEY_SPECIAL_NUMERIC_FIELDS = "special_numerics";
+
     //TODO
     public final static Integer ARRAY_TYPE_CHECK_DOCUMENT_LIMIT = 3;
 

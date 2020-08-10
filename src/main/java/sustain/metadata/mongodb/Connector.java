@@ -161,15 +161,22 @@ public class Connector {
 
     private void getAndMapNumericTypes(String collectionName, String fieldName, CollectionMetaData collectionMetaData, FieldInfo fieldInfo)
     {
+        boolean categorical = false;
         try {
-            List<Object> distinctIntegerValues = getDistinctIntegerValues(collectionName, fieldName);
-            if(distinctIntegerValues != null)
+            //these integer fields should be considered as categorical
+            if(PropertyLoader.getSpecialNumericFields().contains(fieldName))
             {
+                List<Object> distinctIntegerValues = getDistinctIntegerValues(collectionName, fieldName);
+                if(distinctIntegerValues != null)
+                {
 //                fieldInfo.getValue().getTypes().setArray(1L);
 //                fieldInfo.getValue().getTypes().setNumber(null);
-                Mapper.mapCategoricalMetaInfo(collectionMetaData, distinctIntegerValues, fieldInfo);
+                    Mapper.mapCategoricalMetaInfo(collectionMetaData, distinctIntegerValues, fieldInfo);
+                    categorical = true;
+                }
             }
-            else
+
+            if(!categorical)
             {
                 Document resultDoc = getMinMax(collectionName, fieldName);
                 Mapper.mapNumericMetaInfo(collectionMetaData, resultDoc, fieldInfo);
