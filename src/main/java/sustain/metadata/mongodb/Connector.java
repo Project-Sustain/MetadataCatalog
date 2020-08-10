@@ -62,7 +62,7 @@ public class Connector {
             String fieldName = fieldInfo.getId().getKey();
 
             try {
-                if(!PropertyLoader.getIgnoredFields().contains(fieldName))
+                if(!(PropertyLoader.getIgnoredFields().contains(fieldName) || fieldName.contains("geometry")))
                 {
                     //identify date fields by key
                     boolean dateField = fieldName.toLowerCase().contains("date");
