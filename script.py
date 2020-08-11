@@ -7,4 +7,4 @@ import os
 import sys
 
 #print(sys.argv[1])
-os.system("variety " + sys.argv[1] + " --host " + sys.argv[2] + " --port " + sys.argv[3] + " --outputFormat=\'json\'" + " --quiet")
+os.system("variety " + sys.argv[1] + " --host " + sys.argv[2] + " --port " + sys.argv[3] + " --outputFormat=\'json\'" + " --quiet --limit 1000")
