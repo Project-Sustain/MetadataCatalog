@@ -43,10 +43,14 @@ public class Analyzer {
                 while(iterator.hasNext())
                 {
                     String collection = iterator.next();
+//                    String collection = "tract_total_population";
                     List<FieldInfo> fieldInfoList = analyzeCollection(collection);
                     // filter out fields with 100% presence, others are ignored
-                    List<FieldInfo> validFieldList = fieldInfoList.stream().filter(x -> x.getPercentContaining() == 100L).collect(Collectors.toList());
-                    dbMetaData.add(connector.getFieldDetails(collection, validFieldList));
+                    if(fieldInfoList != null)
+                    {
+                        List<FieldInfo> validFieldList = fieldInfoList.stream().filter(x -> x.getPercentContaining() == 100L).collect(Collectors.toList());
+                        dbMetaData.add(connector.getFieldDetails(collection, validFieldList));
+                    }
                 }
 
                 // Creating Object of ObjectMapper define in Jakson Api
@@ -65,7 +69,10 @@ public class Analyzer {
             e.printStackTrace();
         } finally {
             try {
-                writer.close();
+                if(writer != null)
+                {
+                    writer.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -74,13 +81,13 @@ public class Analyzer {
 
     private static List<FieldInfo> analyzeCollection(String collectionName)
     {
-        String homeDirectory = System.getProperty("user.home");
-        System.out.println("Home directory is "+ homeDirectory);
+//        String homeDirectory = System.getProperty("user.home");
+//        System.out.println("Home directory is "+ homeDirectory);
 
         boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
 
-        String specialStr =  "\"var collection = '" +collectionName+ "', outputFormat='json'\"";
-        System.out.println("Special String is :" + specialStr);
+//        String specialStr =  "\"var collection = '" +collectionName+ "', outputFormat='json'\"";
+//        System.out.println("Special String is :" + specialStr);
 
         try {
 
@@ -103,7 +110,8 @@ public class Analyzer {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                output.append(line + "\n");
+                output.append(line);
+                output.append("\n");
             }
 
             int subprocessExited = process.waitFor();
@@ -130,6 +138,8 @@ public class Analyzer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ValueNotFoundException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;

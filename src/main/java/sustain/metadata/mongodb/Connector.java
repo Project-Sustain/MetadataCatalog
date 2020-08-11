@@ -2,6 +2,7 @@ package sustain.metadata.mongodb;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.MongoCommandException;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Projections;
@@ -121,7 +122,10 @@ public class Connector {
 
         try {
             Document resultDoc = getMinMaxDate(collectionName, fieldName);
-            Mapper.mapTemporalMetaInfo(collectionMetaData, resultDoc, fieldInfo);
+            if(resultDoc != null)
+            {
+                Mapper.mapTemporalMetaInfo(collectionMetaData, resultDoc, fieldInfo);
+            }
         } catch (ValueNotFoundException e) {
             e.printStackTrace();
         }
@@ -153,12 +157,16 @@ public class Connector {
 
         // we get only 1 document in the iterator for the above aggregation query
         Document doc = null;
-        MongoCursor<Document> iterator = aggregateIterable.iterator();
-        while(iterator.hasNext())
-        {
-            doc = iterator.next();
-//            System.out.println(doc.get(Constants.MAXIMUM_NUMBER));
-//            System.out.println(doc.get(Constants.MINIMUM_NUMBER));
+        try {
+            MongoCursor<Document> iterator = aggregateIterable.iterator();
+            while(iterator.hasNext())
+            {
+                doc = iterator.next();
+    //            System.out.println(doc.get(Constants.MAXIMUM_NUMBER));
+    //            System.out.println(doc.get(Constants.MINIMUM_NUMBER));
+            }
+        } catch (MongoCommandException e) {
+            e.printStackTrace();
         }
         return doc;
     }
@@ -194,7 +202,10 @@ public class Connector {
     private void getAndMapStringType(String collectionName, String fieldName, CollectionMetaData collectionMetaData, FieldInfo fieldInfo) {
         try {
             List<Object> distinctCategories = getDistinctCategories(collectionName, fieldName);
-            Mapper.mapCategoricalMetaInfo(collectionMetaData, distinctCategories, fieldInfo);
+            if(distinctCategories != null)
+            {
+                Mapper.mapCategoricalMetaInfo(collectionMetaData, distinctCategories, fieldInfo);
+            }
         } catch (ValueNotFoundException e) {
             e.printStackTrace();
         }
@@ -307,17 +318,31 @@ public class Connector {
 
     private List<Object> getDistinctCategories(String collectionName, String fieldName) throws ValueNotFoundException {
         MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
-        MongoCollection<Document> collection = database.getCollection(collectionName);
-        DistinctIterable<String> distinct = collection.distinct(fieldName, String.class);
+//        MongoCollection<Document> collection = database.getCollection(collectionName);
+//        DistinctIterable<String> distinct = collection.distinct(fieldName, String.class);
+//        MongoCursor<String> iterator = distinct.iterator();
 
-        MongoCursor<String> iterator = distinct.iterator();
-        List<Object> categoriclaVals = new ArrayList<>();
+        System.out.println("Distinct Categories for :" + collectionName + "/" + fieldName);
 
-        while (iterator.hasNext())
-        {
-            Object s = iterator.next();
-            categoriclaVals.add(s);
-//            System.out.println(s);
+        List<Object> categoriclaVals = null;
+        try {
+            AggregateIterable<Document> aggregateIterable = database.getCollection(collectionName).aggregate(
+                    Arrays.asList(
+                            group("$" + fieldName)
+                    )
+            );
+
+            categoriclaVals = new ArrayList<>();
+            MongoCursor<Document> iterator = aggregateIterable.iterator();
+
+            while (iterator.hasNext())
+            {
+                Document s = iterator.next();
+                categoriclaVals.add(s.get("_id"));
+    //            System.out.println(s);
+            }
+        } catch (MongoCommandException e) {
+            e.printStackTrace();
         }
         return categoriclaVals;
     }
