@@ -24,6 +24,18 @@ public class Mapper {
         {
             fieldMetadata.setMax(((Integer) resultDoc.get(Constants.MAXIMUM_NUMBER)).doubleValue());
         }
+        else if(resultDoc.get(Constants.MAXIMUM_NUMBER) instanceof String)
+        {
+            fieldMetadata.setMax(Double.valueOf((String) resultDoc.get(Constants.MAXIMUM_NUMBER)));
+        }
+        else if(resultDoc.get(Constants.MAXIMUM_NUMBER) instanceof Long)
+        {
+            fieldMetadata.setMax(((Long) resultDoc.get(Constants.MAXIMUM_NUMBER)).doubleValue());
+        }
+        else if(resultDoc.get(Constants.MAXIMUM_NUMBER) instanceof Float)
+        {
+            fieldMetadata.setMax(((Float) resultDoc.get(Constants.MAXIMUM_NUMBER)).doubleValue());
+        }
         else
         {
             fieldMetadata.setMax((Double) resultDoc.get(Constants.MAXIMUM_NUMBER));
@@ -32,6 +44,18 @@ public class Mapper {
         if(resultDoc.get(Constants.MINIMUM_NUMBER) instanceof Integer)
         {
             fieldMetadata.setMin(((Integer)resultDoc.get(Constants.MINIMUM_NUMBER)).doubleValue());
+        }
+        else if(resultDoc.get(Constants.MINIMUM_NUMBER) instanceof String)
+        {
+            fieldMetadata.setMin(Double.valueOf((String)resultDoc.get(Constants.MINIMUM_NUMBER)));
+        }
+        else if(resultDoc.get(Constants.MINIMUM_NUMBER) instanceof Long)
+        {
+            fieldMetadata.setMin(((Long) resultDoc.get(Constants.MINIMUM_NUMBER)).doubleValue());
+        }
+        else if(resultDoc.get(Constants.MINIMUM_NUMBER) instanceof Float)
+        {
+            fieldMetadata.setMin(((Float) resultDoc.get(Constants.MINIMUM_NUMBER)).doubleValue());
         }
         else
         {
