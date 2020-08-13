@@ -28,37 +28,42 @@ public class Analyzer {
         PropertyLoader.loadPropertyFile();
         FileWriter writer = null;
 
-        MongoIterable<String> collectionNames;
+        List<CollectionMetaData> dbMetaData = new ArrayList<>();
         try {
 
-            List<CollectionMetaData> dbMetaData = new ArrayList<>();
-
             Connector connector = new Connector();
-            collectionNames = connector.getCollectionNames();
 
-            if(collectionNames != null)
+            //get user specified collection names and generate the metadata file for only those collections
+            List<String> collectionNames = PropertyLoader.getCollectionNames();
+
+            if( collectionNames != null )
             {
-                MongoCursor<String> iterator = collectionNames.iterator();
-
-                while(iterator.hasNext())
+                for(String collection : collectionNames)
                 {
-                    String collection = iterator.next();
-//                    String collection = "tract_total_population";
-                    List<FieldInfo> fieldInfoList = analyzeCollection(collection);
-                    // filter out fields with 100% presence, others are ignored
-                    if(fieldInfoList != null)
+                    analyzeAndGenerateMetadata(collection, dbMetaData, connector);
+                }
+            }
+            else // otherwise generate for all the collections in the database
+            {
+                MongoIterable<String>  allCollectionNames = connector.getCollectionNames();
+
+                if(allCollectionNames != null)
+                {
+                    MongoCursor<String> iterator = allCollectionNames.iterator();
+
+                    while(iterator.hasNext())
                     {
-                        List<FieldInfo> validFieldList = fieldInfoList.stream().filter(x -> x.getPercentContaining() == 100L).collect(Collectors.toList());
-                        dbMetaData.add(connector.getFieldDetails(collection, validFieldList));
+                        String collection = iterator.next();
+                        analyzeAndGenerateMetadata(collection, dbMetaData, connector);
                     }
                 }
-
-                // Creating Object of ObjectMapper define in Jakson Api
-                ObjectMapper objectMapper = new ObjectMapper();
-
-                writer = new FileWriter(PropertyLoader.getOutputPathAndName());
-                writer.write(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dbMetaData));
             }
+
+            // Creating Object of ObjectMapper define in Jakson Api
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            writer = new FileWriter(PropertyLoader.getOutputPathAndName());
+            writer.write(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dbMetaData));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -79,15 +84,19 @@ public class Analyzer {
         }
     }
 
+    private static void analyzeAndGenerateMetadata(String collection, List<CollectionMetaData> dbMetaData, Connector connector) {
+
+        List<FieldInfo> fieldInfoList = analyzeCollection(collection);
+        // filter out fields with 100% presence, others are ignored
+        if(fieldInfoList != null)
+        {
+            List<FieldInfo> validFieldList = fieldInfoList.stream().filter(x -> x.getPercentContaining() == 100L).collect(Collectors.toList());
+            dbMetaData.add(connector.getFieldDetails(collection, validFieldList));
+        }
+    }
+
     private static List<FieldInfo> analyzeCollection(String collectionName)
     {
-//        String homeDirectory = System.getProperty("user.home");
-//        System.out.println("Home directory is "+ homeDirectory);
-
-        boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
-
-//        String specialStr =  "\"var collection = '" +collectionName+ "', outputFormat='json'\"";
-//        System.out.println("Special String is :" + specialStr);
 
         try {
 

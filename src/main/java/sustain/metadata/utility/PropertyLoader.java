@@ -23,6 +23,7 @@ public class PropertyLoader {
         propertyValues.put(Constants.PROPERTY_KEY_OUTPUT, prop.getProperty("output"));
         propertyValues.put(Constants.PROPERTY_KEY_SPECIAL_NUMERIC_FIELDS, prop.getProperty("categorical.numeric.fields"));
         propertyValues.put(Constants.PROPERTY_KEY_IGNORE_FIELDS, prop.getProperty("ignore.fields"));
+        propertyValues.put(Constants.PROPERTY_KEY_COLLECTION_NAMES, prop.getProperty("collection.names"));
 
     }
 
@@ -92,5 +93,17 @@ public class PropertyLoader {
         }
 
         throw new ValueNotFoundException("Ignored fields not found");
+    }
+
+    public static List<String> getCollectionNames() throws ValueNotFoundException
+    {
+        String fields = propertyValues.get(Constants.PROPERTY_KEY_COLLECTION_NAMES);
+
+        if(fields != null && !fields.trim().isEmpty())
+        {
+            return Arrays.asList(fields.split(","));
+        }
+
+        return null;
     }
 }
