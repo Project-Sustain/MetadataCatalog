@@ -24,7 +24,7 @@ public class PropertyLoader {
         propertyValues.put(Constants.PROPERTY_KEY_SPECIAL_NUMERIC_FIELDS, prop.getProperty("categorical.numeric.fields"));
         propertyValues.put(Constants.PROPERTY_KEY_IGNORE_FIELDS, prop.getProperty("ignore.fields"));
         propertyValues.put(Constants.PROPERTY_KEY_COLLECTION_NAMES, prop.getProperty("collection.names"));
-
+        propertyValues.put(Constants.PROPERTY_KEY_COLLECTION_IGNORE_FIELDS, prop.getProperty("ignore.collection.fields"));
     }
 
     public static String getMongoDBHost() throws ValueNotFoundException
@@ -102,6 +102,30 @@ public class PropertyLoader {
         if(fields != null && !fields.trim().isEmpty())
         {
             return Arrays.asList(fields.split(","));
+        }
+
+        return null;
+    }
+
+    public static List<String> getIgnoredCollectionFields(String collectionName) throws ValueNotFoundException
+    {
+        String fields = propertyValues.get(Constants.PROPERTY_KEY_COLLECTION_IGNORE_FIELDS);
+
+        if(fields != null && !fields.trim().isEmpty() && fields.trim().contains(collectionName + ":"))
+        {
+            List<String> collectionString = Arrays.asList(fields.trim().split(";"));
+
+            for(String str : collectionString)
+            {
+                if(str.contains(collectionName + ":"))
+                {
+                    String[] splitArray = str.split(":");
+                    if(splitArray.length == 2)
+                    {
+                        return Arrays.asList(splitArray[1].split(","));
+                    }
+                }
+            }
         }
 
         return null;

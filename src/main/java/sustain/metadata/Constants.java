@@ -16,6 +16,7 @@ public class Constants {
     public final static String PROPERTY_KEY_SPECIAL_NUMERIC_FIELDS = "special_numerics";
     public final static String PROPERTY_KEY_IGNORE_FIELDS = "ignore_fields";
     public final static String PROPERTY_KEY_COLLECTION_NAMES = "collection_names";
+    public final static String PROPERTY_KEY_COLLECTION_IGNORE_FIELDS = "collection_ignore_fields";
 
     //TODO
     public final static Integer ARRAY_TYPE_CHECK_DOCUMENT_LIMIT = 3;

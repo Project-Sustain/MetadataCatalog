@@ -65,47 +65,51 @@ public class Connector {
             try {
                 if(!(PropertyLoader.getIgnoredFields().contains(fieldName) || fieldName.contains("geometry")))
                 {
-                    //identify date fields by key
-                    boolean dateField = fieldName.toLowerCase().contains("date");
-
-                    if(dateField)
+                    List<String> ignoredCollectionFields = PropertyLoader.getIgnoredCollectionFields(collectionName);
+                    if( (ignoredCollectionFields != null && !ignoredCollectionFields.contains(fieldName)) || ignoredCollectionFields == null)
                     {
-                        // need to change the type of the field
-                        fieldInfo.getValue().getTypes().setString(null);
-                        fieldInfo.getValue().getTypes().setDate(1L);
-                        getAndMapDateField(collectionName, fieldName, collectionMetaData, fieldInfo);
-                    }
-                    else
-                    {
-                        Types type = fieldInfo.getValue().getTypes();
-                        if(type.getNumber() != null )
-                        {
-                            getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
-                        }
-                        else if(type.getString() != null )
-                        {
-                            getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
-                        }
-                        else if(type.getArray() != null)
-                        {
-                            try {
-                                // array could contain different types of data (Ex; String, Integer, Double, etc)
-                                String arrayType = findArrayType(collectionName, fieldName);
+                        //identify date fields by key
+                        boolean dateField = fieldName.toLowerCase().contains("date");
 
-                                // extract metadata only if the array consists of a unique type
-                                if(arrayType != null)
-                                {
-                                    if(arrayType.equals("String"))
+                        if(dateField)
+                        {
+                            // need to change the type of the field
+                            fieldInfo.getValue().getTypes().setString(null);
+                            fieldInfo.getValue().getTypes().setDate(1L);
+                            getAndMapDateField(collectionName, fieldName, collectionMetaData, fieldInfo);
+                        }
+                        else
+                        {
+                            Types type = fieldInfo.getValue().getTypes();
+                            if(type.getNumber() != null )
+                            {
+                                getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
+                            }
+                            else if(type.getString() != null )
+                            {
+                                getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
+                            }
+                            else if(type.getArray() != null)
+                            {
+                                try {
+                                    // array could contain different types of data (Ex; String, Integer, Double, etc)
+                                    String arrayType = findArrayType(collectionName, fieldName);
+
+                                    // extract metadata only if the array consists of a unique type
+                                    if(arrayType != null)
                                     {
-                                        getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
+                                        if(arrayType.equals("String"))
+                                        {
+                                            getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
+                                        }
+                                        else
+                                        {
+                                            getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
+                                        }
                                     }
-                                    else
-                                    {
-                                        getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
-                                    }
+                                } catch (ValueNotFoundException e) {
+                                    e.printStackTrace();
                                 }
-                            } catch (ValueNotFoundException e) {
-                                e.printStackTrace();
                             }
                         }
                     }
