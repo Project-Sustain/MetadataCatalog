@@ -1,7 +1,6 @@
 package sustain.metadata.mongodb;
 
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Accumulators;
@@ -27,31 +26,16 @@ import static sustain.metadata.Constants.ARRAY_TYPE_CHECK_DOCUMENT_LIMIT;
  */
 public class Connector {
 
-    private MongoClient mongoClient = createMongoClient();
+    private MongoClient mongoClient;
 
     public Connector() throws ValueNotFoundException{
+        this.mongoClient = MongoClientProvider.getMongoClient();
     }
 
     public MongoIterable<String> getCollectionNames() throws ValueNotFoundException {
         MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
         MongoIterable<String> collectionIterator = database.listCollectionNames();
         return collectionIterator;
-    }
-
-    private MongoClient createMongoClient() throws ValueNotFoundException {
-
-        MongoClientURI mongoClientURI = new MongoClientURI(getConnectionString());
-        return new MongoClient(mongoClientURI);
-    }
-
-    private String getConnectionString() throws ValueNotFoundException {
-        StringBuilder sb = new StringBuilder("mongodb://");
-
-        sb.append(PropertyLoader.getMongoDBHost());
-        sb.append(":");
-        sb.append(PropertyLoader.getMongoDBPort());
-
-        return sb.toString();
     }
 
     public CollectionMetaData getFieldDetails(String collectionName , List<FieldInfo> validFieldList) {
