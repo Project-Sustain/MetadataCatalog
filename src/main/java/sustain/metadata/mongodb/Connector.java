@@ -271,16 +271,14 @@ public class Connector {
         int count = 0;
         // stop extracting the distinct values when it exceeds 25, because
         // we're going to return null, if the list includes more than 20 elements
-        while (iterator.hasNext() && count<25)
-        {
+        while (iterator.hasNext() && count < Constants.MAXIMIM_NUMERICAL_VALUES) {
             Integer s = iterator.next();
             distinctIntegers.add(s);
-//            System.out.println(s);
             count++;
         }
 
         // if number of distinct integers are less than 20, we consider it as a categorical field
-        return distinctIntegers.size() <=20 ? distinctIntegers:  null;
+        return distinctIntegers.size() <= 20 ? distinctIntegers:  null;
     }
 
 //    private List<Object> getDistinctDoubleValues(String collectionName, String fieldName) throws ValueNotFoundException {
@@ -323,11 +321,18 @@ public class Connector {
             categoriclaVals = new ArrayList<>();
             MongoCursor<Document> iterator = aggregateIterable.iterator();
 
+            int count = 0;
             while (iterator.hasNext())
             {
                 Document s = iterator.next();
                 categoriclaVals.add(s.get("_id"));
-    //            System.out.println(s);
+                count++;
+
+                // if it exceeds maximum, do not include in the metadata catalog
+                if(count > Constants.MAXIMUM_CATEGORICAL_VALUES)
+                {
+                    return null;
+                }
             }
         } catch (MongoCommandException e) {
             e.printStackTrace();

@@ -20,5 +20,7 @@ public class Constants {
 
     //TODO
     public final static Integer ARRAY_TYPE_CHECK_DOCUMENT_LIMIT = 3;
+    public final static Integer MAXIMUM_CATEGORICAL_VALUES = 500;
+    public final static Integer MAXIMIM_NUMERICAL_VALUES = 25;
 
 }
