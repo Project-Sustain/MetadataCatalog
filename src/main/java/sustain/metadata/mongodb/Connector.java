@@ -4,8 +4,11 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Accumulators;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.javatuples.Pair;
 import sustain.metadata.Constants;
 import sustain.metadata.schema.Mapper;
 import sustain.metadata.schema.input.FieldInfo;
@@ -13,10 +16,7 @@ import sustain.metadata.schema.input.Types;
 import sustain.metadata.schema.output.CollectionMetaData;
 import sustain.metadata.utility.PropertyLoader;
 import sustain.metadata.utility.exceptions.ValueNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import static com.mongodb.client.model.Aggregates.group;
 import static com.mongodb.client.model.Aggregates.project;
 import static sustain.metadata.Constants.ARRAY_TYPE_CHECK_DOCUMENT_LIMIT;
@@ -27,15 +27,49 @@ import static sustain.metadata.Constants.ARRAY_TYPE_CHECK_DOCUMENT_LIMIT;
 public class Connector {
 
     private MongoClient mongoClient;
+    private MongoDatabase database;
 
     public Connector() throws ValueNotFoundException{
         this.mongoClient = MongoClientProvider.getMongoClient();
+        this.database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
     }
 
     public MongoIterable<String> getCollectionNames() throws ValueNotFoundException {
-        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
+//        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
         MongoIterable<String> collectionIterator = database.listCollectionNames();
         return collectionIterator;
+    }
+
+    private boolean isAStructuredField(String collectionName, String fieldName, boolean child)
+    {
+        List<Pair<String, String>> structuredFields = PropertyLoader.getStructuredFields(collectionName);
+
+        for(Pair<String, String> pair : structuredFields)
+        {
+            if(child && pair.getValue1().equals(fieldName)) // if a child
+            {
+                return true;
+            }
+            else if(!child && pair.getValue0().equals(fieldName)) // if a parent
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String getChildField(String collectionName, String parentName)
+    {
+        List<Pair<String, String>> structuredFields = PropertyLoader.getStructuredFields(collectionName);
+
+        for(Pair<String, String> pair : structuredFields)
+        {
+            if(pair.getValue0().equals(parentName))
+            {
+                return pair.getValue1();
+            }
+        }
+        return null;
     }
 
     public CollectionMetaData getFieldDetails(String collectionName , List<FieldInfo> validFieldList) {
@@ -49,8 +83,12 @@ public class Connector {
             try {
                 if(!(PropertyLoader.getIgnoredFields().contains(fieldName) || fieldName.contains("geometry")))
                 {
+                    // if the field is listed as a child field, no need to generate a separate metadata section
+                    boolean isChildField = isAStructuredField(collectionName, fieldName, true);
+                    boolean isParentField = isAStructuredField(collectionName, fieldName, false);
+
                     List<String> ignoredCollectionFields = PropertyLoader.getIgnoredCollectionFields(collectionName);
-                    if( (ignoredCollectionFields != null && !ignoredCollectionFields.contains(fieldName)) || ignoredCollectionFields == null)
+                    if( (!isChildField && ignoredCollectionFields != null && !ignoredCollectionFields.contains(fieldName)) || ignoredCollectionFields == null)
                     {
                         //identify date fields by key
                         boolean dateField = fieldName.toLowerCase().contains("date");
@@ -65,34 +103,42 @@ public class Connector {
                         else
                         {
                             Types type = fieldInfo.getValue().getTypes();
-                            if(type.getNumber() != null )
-                            {
-                                getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
-                            }
-                            else if(type.getString() != null )
-                            {
-                                getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
-                            }
-                            else if(type.getArray() != null)
-                            {
-                                try {
-                                    // array could contain different types of data (Ex; String, Integer, Double, etc)
-                                    String arrayType = findArrayType(collectionName, fieldName);
 
-                                    // extract metadata only if the array consists of a unique type
-                                    if(arrayType != null)
-                                    {
-                                        if(arrayType.equals("String"))
+                            if(isParentField && type.getString() != null)
+                            {
+                                getAndMapStructuredFields(collectionName, fieldName, collectionMetaData, fieldInfo);
+                            }
+                            else
+                            {
+                                if(type.getNumber() != null )
+                                {
+                                    getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
+                                }
+                                else if(type.getString() != null )
+                                {
+                                    getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
+                                }
+                                else if(type.getArray() != null)
+                                {
+                                    try {
+                                        // array could contain different types of data (Ex; String, Integer, Double, etc)
+                                        String arrayType = findArrayType(collectionName, fieldName);
+
+                                        // extract metadata only if the array consists of a unique type
+                                        if(arrayType != null)
                                         {
-                                            getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
+                                            if(arrayType.equals("String"))
+                                            {
+                                                getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
+                                            }
+                                            else
+                                            {
+                                                getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
+                                            }
                                         }
-                                        else
-                                        {
-                                            getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
-                                        }
+                                    } catch (ValueNotFoundException e) {
+                                        e.printStackTrace();
                                     }
-                                } catch (ValueNotFoundException e) {
-                                    e.printStackTrace();
                                 }
                             }
                         }
@@ -104,6 +150,38 @@ public class Connector {
         }
 
         return collectionMetaData;
+    }
+
+    private void getAndMapStructuredFields(String collectionName, String parentFieldName, CollectionMetaData collectionMetaData, FieldInfo fieldInfo) {
+
+        String childFieldName = getChildField(collectionName, parentFieldName);
+        Map<String, List<String>> parentChildMap = new HashMap<>();
+
+        try {
+            // First we need to get all the distinct values for the parent field
+            List<Object> categories = getDistinctCategories(collectionName, parentFieldName);
+
+            // Next, get all the valid distinct values for the child field per each parent category
+            for(Object category : categories)
+            {
+                String catString = (String) category;
+                List<Bson> filters = new ArrayList<Bson>();
+                filters.add(Filters.eq(parentFieldName, catString));
+
+                Bson filter = Filters.and(filters);
+
+                MongoCollection<Document> collection = database.getCollection(collectionName);
+
+                List<String> childCatList = collection.distinct(childFieldName, filter, String.class).into(new ArrayList<String>());
+
+                parentChildMap.put(parentFieldName, childCatList);
+            }
+
+            Mapper.mapStructureMetaInfo(collectionMetaData, parentChildMap, fieldInfo, childFieldName);
+
+        } catch (ValueNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     private void getAndMapDateField(String collectionName, String fieldName, CollectionMetaData collectionMetaData, FieldInfo fieldInfo) {
@@ -121,7 +199,7 @@ public class Connector {
 
     private Document getMinMaxDate(String collectionName, String fieldName) throws ValueNotFoundException
     {
-        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
+//        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
 
         AggregateIterable<Document> aggregateIterable = database.getCollection(collectionName).aggregate(
                 Arrays.asList(
@@ -200,7 +278,7 @@ public class Connector {
     }
 
     private String findArrayType(String collectionName, String fieldName) throws ValueNotFoundException {
-        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
+//        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
         FindIterable<Document> findIterable = database.getCollection(collectionName).find().projection(Projections.include(fieldName)).limit(ARRAY_TYPE_CHECK_DOCUMENT_LIMIT);
         MongoCursor<Document> iterator = findIterable.iterator();
 
@@ -237,7 +315,7 @@ public class Connector {
     }
 
     private Document getMinMax(String collectionName, String fieldName) throws ValueNotFoundException {
-        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
+//        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
         AggregateIterable<Document> documents = database.getCollection(collectionName).aggregate(Arrays.asList(
                 group(null,
                         Accumulators.max(Constants.MAXIMUM_NUMBER, "$" + fieldName),
@@ -261,7 +339,7 @@ public class Connector {
     }
 
     private List<Object> getDistinctIntegerValues(String collectionName, String fieldName) throws ValueNotFoundException {
-        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
+//        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
         MongoCollection<Document> collection = database.getCollection(collectionName);
         DistinctIterable<Integer> distinct = collection.distinct(fieldName, Integer.class);
 
@@ -303,7 +381,7 @@ public class Connector {
 //    }
 
     private List<Object> getDistinctCategories(String collectionName, String fieldName) throws ValueNotFoundException {
-        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
+//        MongoDatabase database = mongoClient.getDatabase(PropertyLoader.getMongoDBDB());
 //        MongoCollection<Document> collection = database.getCollection(collectionName);
 //        DistinctIterable<String> distinct = collection.distinct(fieldName, String.class);
 //        MongoCursor<String> iterator = distinct.iterator();

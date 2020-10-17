@@ -1,5 +1,6 @@
 package sustain.metadata.utility;
 
+import org.javatuples.Pair;
 import sustain.metadata.Constants;
 import sustain.metadata.utility.exceptions.ValueNotFoundException;
 
@@ -25,6 +26,7 @@ public class PropertyLoader {
         propertyValues.put(Constants.PROPERTY_KEY_IGNORE_FIELDS, prop.getProperty("ignore.fields"));
         propertyValues.put(Constants.PROPERTY_KEY_COLLECTION_NAMES, prop.getProperty("collection.names"));
         propertyValues.put(Constants.PROPERTY_KEY_COLLECTION_IGNORE_FIELDS, prop.getProperty("ignore.collection.fields"));
+        propertyValues.put(Constants.PROPERTY_KEY_STRUCTURED_FIELDS, prop.getProperty("structured.collection.fields"));
     }
 
     public static String getMongoDBHost() throws ValueNotFoundException
@@ -123,6 +125,41 @@ public class PropertyLoader {
                     if(splitArray.length == 2)
                     {
                         return Arrays.asList(splitArray[1].split(","));
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static List<Pair<String,String>> getStructuredFields(String collectionName)
+    {
+        String fields = propertyValues.get(Constants.PROPERTY_KEY_STRUCTURED_FIELDS);
+
+        if(fields != null && !fields.trim().isEmpty() && fields.trim().contains(collectionName + ":"))
+        {
+            List<String> collectionString = Arrays.asList(fields.trim().split(";"));
+
+            for(String str : collectionString)
+            {
+                if(str.contains(collectionName + ":"))
+                {
+                    String[] splitArray = str.split(":");
+                    if(splitArray.length == 2 && splitArray[0].equals(collectionName))
+                    {
+                        final String[] split = splitArray[1].split("#");
+                        
+                        List<Pair<String,String>> returnList = new ArrayList<>();
+                        for( String pair : split )
+                        {
+                            String[] parentAndChild = pair.split(",");
+                            if(parentAndChild.length == 2)
+                            {
+                                returnList.add(new Pair<>(parentAndChild[0], parentAndChild[1]));
+                            }
+                        }
+                        return returnList;
                     }
                 }
             }

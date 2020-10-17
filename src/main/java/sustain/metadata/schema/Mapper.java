@@ -9,6 +9,7 @@ import sustain.metadata.schema.output.FieldMetadata;
 import sustain.metadata.schema.output.Type;
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by laksheenmendis on 8/3/20 at 10:33 PM
@@ -111,5 +112,16 @@ public class Mapper {
         {
             return Type.STRING;
         }
+    }
+
+    public static void mapStructureMetaInfo(CollectionMetaData collectionMetaData, Map<String, List<String>> parentChildMap, FieldInfo fieldInfo, String childFieldName) {
+
+        FieldMetadata fieldMetadata = new FieldMetadata();
+        fieldMetadata.setName(fieldInfo.getId().getKey());
+        fieldMetadata.setType(getType(fieldInfo.getValue().getTypes()));
+        fieldMetadata.setChildName(childFieldName);
+        fieldMetadata.setMap(parentChildMap);
+
+        collectionMetaData.getFieldMetadata().add(fieldMetadata);
     }
 }

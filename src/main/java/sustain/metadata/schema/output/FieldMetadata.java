@@ -2,7 +2,9 @@ package sustain.metadata.schema.output;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by laksheenmendis on 8/3/20 at 10:06 PM
@@ -21,6 +23,10 @@ public class FieldMetadata {
     private String minDate;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private String maxDate;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private Map<String, List<String>> map;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private String childName;
 
     public FieldMetadata() {
     }
@@ -93,5 +99,25 @@ public class FieldMetadata {
 
     public void setMaxDate(String maxDate) {
         this.maxDate = maxDate;
+    }
+
+    public Map<String, List<String>> getMap() {
+        if(map == null)
+        {
+            map = new HashMap<>();
+        }
+        return map;
+    }
+
+    public void setMap(Map<String, List<String>> map) {
+        this.map = map;
+    }
+
+    public String getChildName() {
+        return childName;
+    }
+
+    public void setChildName(String childName) {
+        this.childName = childName;
     }
 }
