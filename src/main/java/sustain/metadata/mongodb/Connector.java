@@ -174,7 +174,7 @@ public class Connector {
 
                 List<String> childCatList = collection.distinct(childFieldName, filter, String.class).into(new ArrayList<String>());
 
-                parentChildMap.put(parentFieldName, childCatList);
+                parentChildMap.put(catString, childCatList);
             }
 
             Mapper.mapStructureMetaInfo(collectionMetaData, parentChildMap, fieldInfo, childFieldName);
