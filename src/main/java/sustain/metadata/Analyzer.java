@@ -2,22 +2,21 @@ package sustain.metadata;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
 import sustain.metadata.mongodb.Connector;
-import sustain.metadata.schema.input.FieldInfo;
 import sustain.metadata.schema.output.CollectionMetaData;
+import sustain.metadata.task.AnalyzeTask;
 import sustain.metadata.utility.PropertyLoader;
 import sustain.metadata.utility.exceptions.ValueNotFoundException;
-import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Created by laksheenmendis on 7/30/20 at 11:47 PM
@@ -28,7 +27,7 @@ public class Analyzer {
         PropertyLoader.loadPropertyFile();
         FileWriter writer = null;
 
-        List<CollectionMetaData> dbMetaData = new ArrayList<>();
+        List<CollectionMetaData> dbMetaData = null;
         try {
 
             Connector connector = new Connector();
@@ -38,10 +37,7 @@ public class Analyzer {
 
             if( collectionNames != null )
             {
-                for(String collection : collectionNames)
-                {
-                    analyzeAndGenerateMetadata(collection, dbMetaData, connector);
-                }
+                dbMetaData = analyzeAndGenerateMetadata(collectionNames);
             }
             else // otherwise generate for all the collections in the database
             {
@@ -50,12 +46,13 @@ public class Analyzer {
                 if(allCollectionNames != null)
                 {
                     MongoCursor<String> iterator = allCollectionNames.iterator();
+                    collectionNames = new ArrayList<>();
 
                     while(iterator.hasNext())
                     {
-                        String collection = iterator.next();
-                        analyzeAndGenerateMetadata(collection, dbMetaData, connector);
+                        collectionNames.add(iterator.next());
                     }
+                    dbMetaData = analyzeAndGenerateMetadata(collectionNames);
                 }
             }
 
@@ -84,73 +81,34 @@ public class Analyzer {
         }
     }
 
-    private static void analyzeAndGenerateMetadata(String collection, List<CollectionMetaData> dbMetaData, Connector connector) {
+    private static List<CollectionMetaData> analyzeAndGenerateMetadata(List<String> collectionNames) {
 
-        List<FieldInfo> fieldInfoList = analyzeCollection(collection);
-        // filter out fields with 100% presence, others are ignored
-        if(fieldInfoList != null)
-        {
-            List<FieldInfo> validFieldList = fieldInfoList.stream().filter(x -> x.getPercentContaining() == 100L).collect(Collectors.toList());
-            dbMetaData.add(connector.getFieldDetails(collection, validFieldList));
-        }
-    }
+        List<AnalyzeTask> callableTasks = new ArrayList<>();
+        collectionNames.stream().forEach(collection -> { callableTasks.add(new AnalyzeTask(collection)); });
 
-    private static List<FieldInfo> analyzeCollection(String collectionName)
-    {
+        List<CollectionMetaData> dbmetaData = new ArrayList<>();
 
+        ExecutorService executor = Executors.newFixedThreadPool(30);
         try {
+            List<Future<CollectionMetaData>> futures = executor.invokeAll(callableTasks);
 
-            ProcessBuilder processBuilder = new ProcessBuilder();
-
-            // Run a shell command
-            String dbAndCollection = PropertyLoader.getMongoDBDB() + "/" + collectionName;
-            System.out.println("DB and Collection is :" + dbAndCollection);
-
-//            processBuilder.command("sh", "-c","mongo", PropertyLoader.getMongoDBDB(),"--host", PropertyLoader.getMongoDBHost(), "--quiet", "--eval", specialStr, "variety.js");
-//            processBuilder.command(new String[]{"python3", "script.py", PropertyLoader.getMongoDBDB(), PropertyLoader.getMongoDBHost(), "users"});
-            processBuilder.command(new String[]{"python3", "script.py", dbAndCollection, PropertyLoader.getMongoDBHost(), PropertyLoader.getMongoDBPort()});
-
-            Process process = processBuilder.start();
-            System.out.println("Process started");
-
-            StringBuilder output = new StringBuilder();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
-                output.append("\n");
+            for(Future<CollectionMetaData> collectionMetaDataFuture : futures)
+            {
+                try {
+                    //this is a blocking call
+                    CollectionMetaData metaData = collectionMetaDataFuture.get();
+                    dbmetaData.add(metaData);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
             }
-
-            int subprocessExited = process.waitFor();
-            if (subprocessExited==0) {
-                System.out.println("Success!");
-                System.out.println(output);
-            } else {
-                //abnormal...
-                System.out.println("Failed to load for collection :" +collectionName);
-                //System.out.println(output);
-            }
-
-            System.out.println("Process waiting over");
-
-            ObjectMapper objectMapper = new ObjectMapper();
-
-            TypeFactory typeFactory = objectMapper.getTypeFactory();
-            CollectionType collectionType = typeFactory.constructCollectionType(List.class, FieldInfo.class);
-            List<FieldInfo> fieldInfoList = objectMapper.readValue(output.toString(), collectionType);
-            return fieldInfoList;
-
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } catch (ValueNotFoundException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return null;
+
+        executor.shutdownNow();
+        return dbmetaData;
     }
+
+
 }
