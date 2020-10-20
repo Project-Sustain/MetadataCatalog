@@ -25,6 +25,7 @@ public class PropertyLoader {
         propertyValues.put(Constants.PROPERTY_KEY_SPECIAL_NUMERIC_FIELDS, prop.getProperty("categorical.numeric.fields"));
         propertyValues.put(Constants.PROPERTY_KEY_IGNORE_FIELDS, prop.getProperty("ignore.fields"));
         propertyValues.put(Constants.PROPERTY_KEY_COLLECTION_NAMES, prop.getProperty("collection.names"));
+        propertyValues.put(Constants.PROPERTY_KEY_IGNORED_COLLECTION_NAMES, prop.getProperty("ignore.collection.names"));
         propertyValues.put(Constants.PROPERTY_KEY_COLLECTION_IGNORE_FIELDS, prop.getProperty("ignore.collection.fields"));
         propertyValues.put(Constants.PROPERTY_KEY_STRUCTURED_FIELDS, prop.getProperty("structured.collection.fields"));
     }
@@ -100,6 +101,18 @@ public class PropertyLoader {
     public static List<String> getCollectionNames() throws ValueNotFoundException
     {
         String fields = propertyValues.get(Constants.PROPERTY_KEY_COLLECTION_NAMES);
+
+        if(fields != null && !fields.trim().isEmpty())
+        {
+            return Arrays.asList(fields.split(","));
+        }
+
+        return null;
+    }
+
+    public static List<String> getIgnoredCollectionNames() throws ValueNotFoundException
+    {
+        String fields = propertyValues.get(Constants.PROPERTY_KEY_IGNORED_COLLECTION_NAMES);
 
         if(fields != null && !fields.trim().isEmpty())
         {

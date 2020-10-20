@@ -45,6 +45,8 @@ public class Analyzer {
 
                 if(allCollectionNames != null)
                 {
+                    List<String> ignoreNames = PropertyLoader.getIgnoredCollectionNames();
+
                     MongoCursor<String> iterator = allCollectionNames.iterator();
                     collectionNames = new ArrayList<>();
 
@@ -52,6 +54,7 @@ public class Analyzer {
                     {
                         collectionNames.add(iterator.next());
                     }
+                    collectionNames.removeAll(ignoreNames);
                     dbMetaData = analyzeAndGenerateMetadata(collectionNames);
                 }
             }

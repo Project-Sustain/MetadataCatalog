@@ -44,17 +44,21 @@ public class Connector {
     {
         List<Pair<String, String>> structuredFields = PropertyLoader.getStructuredFields(collectionName);
 
-        for(Pair<String, String> pair : structuredFields)
+        if(structuredFields != null)
         {
-            if(child && pair.getValue1().equals(fieldName)) // if a child
+            for(Pair<String, String> pair : structuredFields)
             {
-                return true;
-            }
-            else if(!child && pair.getValue0().equals(fieldName)) // if a parent
-            {
-                return true;
+                if(child && pair.getValue1().equals(fieldName)) // if a child
+                {
+                    return true;
+                }
+                else if(!child && pair.getValue0().equals(fieldName)) // if a parent
+                {
+                    return true;
+                }
             }
         }
+
         return false;
     }
 
