@@ -23,7 +23,7 @@ public class CollectionMetaData {
         this.collection = collection;
     }
 
-    public List<FieldMetadata> getFieldMetadata() {
+    public synchronized List<FieldMetadata> getFieldMetadata() {
         if(fieldMetadata == null)
         {
             fieldMetadata = new ArrayList<>();
