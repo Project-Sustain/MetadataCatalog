@@ -55,6 +55,7 @@ public class FieldDetailTask implements Runnable {
                 List<String> ignoredCollectionFields = PropertyLoader.getIgnoredCollectionFields(collectionName);
                 if( (!isChildField && ignoredCollectionFields != null && !ignoredCollectionFields.contains(fieldName)) || ignoredCollectionFields == null)
                 {
+                    System.out.println("Started processing for " + collectionName + "/" + fieldName);
                     //identify date fields by key
                     boolean dateField = fieldName.toLowerCase().contains("date");
 
@@ -216,9 +217,6 @@ public class FieldDetailTask implements Runnable {
                 )
         );
 
-
-        System.out.println("Min and max values for :" + collectionName + "/" + fieldName);
-
         // we get only 1 document in the iterator for the above aggregation query
         Document doc = null;
         try {
@@ -321,9 +319,6 @@ public class FieldDetailTask implements Runnable {
                 )
         ));
 
-
-        System.out.println("Min and max values for :" + collectionName + "/" + fieldName);
-
         // we get only 1 document in the iterator for the above aggregation query
         Document doc = null;
         MongoCursor<Document> iterator = documents.iterator();
@@ -384,8 +379,6 @@ public class FieldDetailTask implements Runnable {
 //        DistinctIterable<String> distinct = collection.distinct(fieldName, String.class);
 //        MongoCursor<String> iterator = distinct.iterator();
 
-        System.out.println("Distinct Categories for :" + collectionName + "/" + fieldName);
-
         List<Object> categoriclaVals = null;
         try {
             AggregateIterable<Document> aggregateIterable = database.getCollection(collectionName).aggregate(
@@ -407,6 +400,7 @@ public class FieldDetailTask implements Runnable {
                 // if it exceeds maximum, do not include in the metadata catalog
                 if(count > Constants.MAXIMUM_CATEGORICAL_VALUES)
                 {
+                    System.out.println("Aborted processing for " + collectionName + "/" + fieldName);
                     return null;
                 }
             }
