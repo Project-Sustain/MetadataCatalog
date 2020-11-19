@@ -84,8 +84,8 @@ public class Mapper {
 
         long max = ((java.util.Date) resultDoc.get(Constants.MAXIMUM_NUMBER)).getTime();
         long min = ((java.util.Date) resultDoc.get(Constants.MINIMUM_NUMBER)).getTime();
-        fieldMetadata.setMaxDate(new Date(max).toString());
-        fieldMetadata.setMinDate(new Date(min).toString());
+        fieldMetadata.setMaxDate(max);
+        fieldMetadata.setMinDate(min);
 
         collectionMetaData.getFieldMetadata().add(fieldMetadata);
     }

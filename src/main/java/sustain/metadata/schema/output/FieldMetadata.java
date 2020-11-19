@@ -20,9 +20,9 @@ public class FieldMetadata {
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private List<Object> values;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    private String minDate;
+    private Long minDate;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    private String maxDate;
+    private Long maxDate;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Map<String, List<String>> map;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -31,7 +31,7 @@ public class FieldMetadata {
     public FieldMetadata() {
     }
 
-    public FieldMetadata(String name, Type type, double min, double max, List<Object> values, String minDate, String maxDate) {
+    public FieldMetadata(String name, Type type, double min, double max, List<Object> values, long minDate, long maxDate) {
         this.name = name;
         this.type = type;
         this.min = min;
@@ -85,19 +85,19 @@ public class FieldMetadata {
         this.values = values;
     }
 
-    public String getMinDate() {
+    public Long getMinDate() {
         return minDate;
     }
 
-    public void setMinDate(String minDate) {
+    public void setMinDate(Long minDate) {
         this.minDate = minDate;
     }
 
-    public String getMaxDate() {
+    public Long getMaxDate() {
         return maxDate;
     }
 
-    public void setMaxDate(String maxDate) {
+    public void setMaxDate(Long maxDate) {
         this.maxDate = maxDate;
     }
 

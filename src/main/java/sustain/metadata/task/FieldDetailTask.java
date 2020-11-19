@@ -56,55 +56,59 @@ public class FieldDetailTask implements Runnable {
                 if( (!isChildField && ignoredCollectionFields != null && !ignoredCollectionFields.contains(fieldName)) || ignoredCollectionFields == null)
                 {
                     System.out.println("Started processing for " + collectionName + "/" + fieldName);
-                    //identify date fields by key
-                    boolean dateField = fieldName.toLowerCase().contains("date");
 
-                    if(dateField)
+                    Types type = fieldInfo.getValue().getTypes();
+
+                    if(isParentField && type.getString() != null)
                     {
-                        // need to change the type of the field
-                        fieldInfo.getValue().getTypes().setString(null);
-                        fieldInfo.getValue().getTypes().setDate(1L);
-                        getAndMapDateField(collectionName, fieldName, collectionMetaData, fieldInfo);
+                        getAndMapStructuredFields(collectionName, fieldName, collectionMetaData, fieldInfo);
                     }
                     else
                     {
-                        Types type = fieldInfo.getValue().getTypes();
-
-                        if(isParentField && type.getString() != null)
+                        if(type.getNumber() != null )
                         {
-                            getAndMapStructuredFields(collectionName, fieldName, collectionMetaData, fieldInfo);
+                            getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
                         }
-                        else
+                        else if(type.getString() != null )
                         {
-                            if(type.getNumber() != null )
+                            //identify date fields by key
+                            boolean dateField = fieldName.toLowerCase().contains("date");
+                            if(dateField)
                             {
-                                getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
+                                // need to change the type of the field
+                                fieldInfo.getValue().getTypes().setString(null);
+                                fieldInfo.getValue().getTypes().setDate(1L);
+                                getAndMapDateField(collectionName, fieldName, collectionMetaData, fieldInfo, false);
                             }
-                            else if(type.getString() != null )
+                            else
                             {
                                 getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
                             }
-                            else if(type.getArray() != null)
-                            {
-                                try {
-                                    // array could contain different types of data (Ex; String, Integer, Double, etc)
-                                    String arrayType = findArrayType(collectionName, fieldName);
+                        }
+                        else if(type.getDate() != null)
+                        {
+                            getAndMapDateField(collectionName, fieldName, collectionMetaData, fieldInfo, true);
+                        }
+                        else if(type.getArray() != null)
+                        {
+                            try {
+                                // array could contain different types of data (Ex; String, Integer, Double, etc)
+                                String arrayType = findArrayType(collectionName, fieldName);
 
-                                    // extract metadata only if the array consists of a unique type
-                                    if(arrayType != null)
+                                // extract metadata only if the array consists of a unique type
+                                if(arrayType != null)
+                                {
+                                    if(arrayType.equals("String"))
                                     {
-                                        if(arrayType.equals("String"))
-                                        {
-                                            getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
-                                        }
-                                        else
-                                        {
-                                            getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
-                                        }
+                                        getAndMapStringType(collectionName, fieldName, collectionMetaData, fieldInfo);
                                     }
-                                } catch (ValueNotFoundException e) {
-                                    e.printStackTrace();
+                                    else
+                                    {
+                                        getAndMapNumericTypes(collectionName, fieldName, collectionMetaData, fieldInfo);
+                                    }
                                 }
+                            } catch (ValueNotFoundException e) {
+                                e.printStackTrace();
                             }
                         }
                     }
@@ -183,10 +187,19 @@ public class FieldDetailTask implements Runnable {
         }
     }
 
-    private void getAndMapDateField(String collectionName, String fieldName, CollectionMetaData collectionMetaData, FieldInfo fieldInfo) {
+    private void getAndMapDateField(String collectionName, String fieldName, CollectionMetaData collectionMetaData, FieldInfo fieldInfo, boolean isRealDateField) {
 
         try {
-            Document resultDoc = getMinMaxDate(collectionName, fieldName);
+            Document resultDoc;
+            if(isRealDateField)
+            {
+                resultDoc = getMinMax(collectionName, fieldName);
+            }
+            else
+            {
+                resultDoc = getMinMaxDate(collectionName, fieldName);
+            }
+
             if(resultDoc != null)
             {
                 Mapper.mapTemporalMetaInfo(collectionMetaData, resultDoc, fieldInfo);
