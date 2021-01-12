@@ -43,6 +43,7 @@ public class ConnectorTest {
         PowerMockito.when(MongoClientProvider.getMongoClient()).thenReturn(mongoClient);
         PowerMockito.mockStatic(PropertyLoader.class);
         PowerMockito.when(PropertyLoader.getMongoDBDB()).thenReturn(MONGO_DB);
+        PowerMockito.when(mongoClient.getDatabase(PropertyLoader.getMongoDBDB())).thenReturn(databse);
         connector = new Connector();
     }
 

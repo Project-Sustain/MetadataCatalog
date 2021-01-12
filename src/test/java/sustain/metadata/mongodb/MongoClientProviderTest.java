@@ -34,6 +34,8 @@ public class MongoClientProviderTest {
         PowerMockito.mockStatic(PropertyLoader.class);
         PowerMockito.when(PropertyLoader.getMongoDBHost()).thenReturn(MONGODB_HOST);
         PowerMockito.when(PropertyLoader.getMongoDBPort()).thenReturn(MONGODB_PORT);
+
+        Whitebox.setInternalState(MongoClientProvider.class, "mongoClient", (Object[]) null);
     }
 
     @Test
