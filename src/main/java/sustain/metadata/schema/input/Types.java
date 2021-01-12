@@ -16,7 +16,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
         "ObjectId",
         "String",
         "Array",
-        "Number"
+        "Number",
+        "Date",
+        "Object"
 })
 public class Types {
     @JsonProperty("ObjectId")
@@ -29,6 +31,8 @@ public class Types {
     private Long number;
     @JsonProperty("Date")
     private Long date;
+    @JsonProperty("Object")
+    private Object object;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -103,6 +107,16 @@ public class Types {
     @JsonProperty("Date")
     public void setDate(Long date) {
         this.date = date;
+    }
+
+    @JsonProperty("Object")
+    public Object getObject() {
+        return object;
+    }
+
+    @JsonProperty("Object")
+    public void setObject(Object object) {
+        this.object = object;
     }
 
     @JsonAnyGetter

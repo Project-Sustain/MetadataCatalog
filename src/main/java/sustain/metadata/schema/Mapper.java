@@ -7,7 +7,6 @@ import sustain.metadata.schema.input.Types;
 import sustain.metadata.schema.output.CollectionMetaData;
 import sustain.metadata.schema.output.FieldMetadata;
 import sustain.metadata.schema.output.Type;
-import java.sql.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -21,49 +20,60 @@ public class Mapper {
         FieldMetadata fieldMetadata = new FieldMetadata();
         fieldMetadata.setName(fieldInfo.getId().getKey());
         fieldMetadata.setType(getType(fieldInfo.getValue().getTypes()));
-        if(resultDoc.get(Constants.MAXIMUM_NUMBER) instanceof Integer)
-        {
-            fieldMetadata.setMax(((Integer) resultDoc.get(Constants.MAXIMUM_NUMBER)).doubleValue());
-        }
-        else if(resultDoc.get(Constants.MAXIMUM_NUMBER) instanceof String)
-        {
-            fieldMetadata.setMax(Double.valueOf((String) resultDoc.get(Constants.MAXIMUM_NUMBER)));
-        }
-        else if(resultDoc.get(Constants.MAXIMUM_NUMBER) instanceof Long)
-        {
-            fieldMetadata.setMax(((Long) resultDoc.get(Constants.MAXIMUM_NUMBER)).doubleValue());
-        }
-        else if(resultDoc.get(Constants.MAXIMUM_NUMBER) instanceof Float)
-        {
-            fieldMetadata.setMax(((Float) resultDoc.get(Constants.MAXIMUM_NUMBER)).doubleValue());
-        }
-        else
-        {
-            fieldMetadata.setMax((Double) resultDoc.get(Constants.MAXIMUM_NUMBER));
-        }
 
-        if(resultDoc.get(Constants.MINIMUM_NUMBER) instanceof Integer)
-        {
-            fieldMetadata.setMin(((Integer)resultDoc.get(Constants.MINIMUM_NUMBER)).doubleValue());
-        }
-        else if(resultDoc.get(Constants.MINIMUM_NUMBER) instanceof String)
-        {
-            fieldMetadata.setMin(Double.valueOf((String)resultDoc.get(Constants.MINIMUM_NUMBER)));
-        }
-        else if(resultDoc.get(Constants.MINIMUM_NUMBER) instanceof Long)
-        {
-            fieldMetadata.setMin(((Long) resultDoc.get(Constants.MINIMUM_NUMBER)).doubleValue());
-        }
-        else if(resultDoc.get(Constants.MINIMUM_NUMBER) instanceof Float)
-        {
-            fieldMetadata.setMin(((Float) resultDoc.get(Constants.MINIMUM_NUMBER)).doubleValue());
-        }
-        else
-        {
-            fieldMetadata.setMin((Double) resultDoc.get(Constants.MINIMUM_NUMBER));
-        }
+        //sets maximum
+        setMaxValue(fieldMetadata, resultDoc.get(Constants.MAXIMUM_NUMBER));
+        //sets minimum
+        setMinValue(fieldMetadata, resultDoc.get(Constants.MINIMUM_NUMBER));
 
         collectionMetaData.getFieldMetadata().add(fieldMetadata);
+    }
+
+    private static void setMaxValue(FieldMetadata fieldMetadata, Object value)
+    {
+        if(value instanceof Integer)
+        {
+            fieldMetadata.setMax(((Integer) value).doubleValue());
+        }
+        else if(value instanceof String)
+        {
+            fieldMetadata.setMax(Double.parseDouble((String) value));
+        }
+        else if(value instanceof Long)
+        {
+            fieldMetadata.setMax(((Long) value).doubleValue());
+        }
+        else if(value instanceof Float)
+        {
+            fieldMetadata.setMax(((Float) value).doubleValue());
+        }
+        else {
+            fieldMetadata.setMax(((Double) value));
+        }
+    }
+
+    private static void setMinValue(FieldMetadata fieldMetadata, Object value)
+    {
+        if(value instanceof Integer)
+        {
+            fieldMetadata.setMin(((Integer) value).doubleValue());
+        }
+        else if(value instanceof String)
+        {
+            fieldMetadata.setMin(Double.parseDouble((String) value));
+        }
+        else if(value instanceof Long)
+        {
+            fieldMetadata.setMin(((Long) value).doubleValue());
+        }
+        else if(value instanceof Float)
+        {
+            fieldMetadata.setMin(((Float) value).doubleValue());
+        }
+        else
+        {
+            fieldMetadata.setMin(((Double) value));
+        }
     }
 
     public static void mapCategoricalMetaInfo(CollectionMetaData collectionMetaData, List<Object> distinctCategories, FieldInfo fieldInfo)
@@ -90,28 +100,48 @@ public class Mapper {
         collectionMetaData.getFieldMetadata().add(fieldMetadata);
     }
 
+    public static void mapTemporalMetaInfoFromEpochTime(CollectionMetaData collectionMetaData, Document resultDoc, FieldInfo fieldInfo)
+    {
+        FieldMetadata fieldMetadata = new FieldMetadata();
+        fieldMetadata.setName(fieldInfo.getId().getKey());
+        fieldMetadata.setType(getType(fieldInfo.getValue().getTypes()));
+
+        long max = ((org.bson.types.Decimal128) resultDoc.get(Constants.MAXIMUM_NUMBER)).longValue();
+        long min = ((org.bson.types.Decimal128) resultDoc.get(Constants.MINIMUM_NUMBER)).longValue();
+        fieldMetadata.setMaxDate(max);
+        fieldMetadata.setMinDate(min);
+
+        collectionMetaData.getFieldMetadata().add(fieldMetadata);
+    }
+
     private static Type getType(Types type)
     {
+        Type returnType;
         if(type.getNumber() != null)
         {
-            return Type.NUMBER;
+            returnType = Type.NUMBER;
         }
         else if(type.getObjectId() != null)
         {
-            return Type.OBJECTID;
+            returnType = Type.OBJECTID;
         }
         else if(type.getArray() != null)
         {
-            return Type.ARRAY;
+            returnType = Type.ARRAY;
         }
         else if(type.getDate() != null)
         {
-            return Type.DATE;
+            returnType = Type.DATE;
+        }
+        else if(type.getObject() != null)
+        {
+            returnType = Type.OBJECT;
         }
         else
         {
-            return Type.STRING;
+            returnType = Type.STRING;
         }
+        return returnType;
     }
 
     public static void mapStructureMetaInfo(CollectionMetaData collectionMetaData, Map<String, List<String>> parentChildMap, FieldInfo fieldInfo, String childFieldName) {

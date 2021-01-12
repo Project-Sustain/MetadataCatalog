@@ -27,37 +27,8 @@ public class Analyzer {
         PropertyLoader.loadPropertyFile();
         FileWriter writer = null;
 
-        List<CollectionMetaData> dbMetaData = null;
         try {
-
-            Connector connector = new Connector();
-
-            //get user specified collection names and generate the metadata file for only those collections
-            List<String> collectionNames = PropertyLoader.getCollectionNames();
-
-            if( collectionNames != null )
-            {
-                dbMetaData = analyzeAndGenerateMetadata(collectionNames);
-            }
-            else // otherwise generate for all the collections in the database
-            {
-                MongoIterable<String>  allCollectionNames = connector.getCollectionNames();
-
-                if(allCollectionNames != null)
-                {
-                    List<String> ignoreNames = PropertyLoader.getIgnoredCollectionNames();
-
-                    MongoCursor<String> iterator = allCollectionNames.iterator();
-                    collectionNames = new ArrayList<>();
-
-                    while(iterator.hasNext())
-                    {
-                        collectionNames.add(iterator.next());
-                    }
-                    collectionNames.removeAll(ignoreNames);
-                    dbMetaData = analyzeAndGenerateMetadata(collectionNames);
-                }
-            }
+            List<CollectionMetaData> dbMetaData = processReqCollections();
 
             // Creating Object of ObjectMapper define in Jakson Api
             ObjectMapper objectMapper = new ObjectMapper();
@@ -82,6 +53,39 @@ public class Analyzer {
                 e.printStackTrace();
             }
         }
+    }
+
+    private static List<CollectionMetaData> processReqCollections() throws ValueNotFoundException {
+        List<CollectionMetaData> dbMetaData = null;
+        Connector connector = new Connector();
+
+        //get user specified collection names and generate the metadata file for only those collections
+        List<String> collectionNames = PropertyLoader.getCollectionNames();
+
+        if( collectionNames != null )
+        {
+            dbMetaData = analyzeAndGenerateMetadata(collectionNames);
+        }
+        else // otherwise generate for all the collections in the database
+        {
+            MongoIterable<String>  allCollectionNames = connector.getCollectionNames();
+
+            if(allCollectionNames != null)
+            {
+                List<String> ignoreNames = PropertyLoader.getIgnoredCollectionNames();
+
+                MongoCursor<String> iterator = allCollectionNames.iterator();
+                collectionNames = new ArrayList<>();
+
+                while(iterator.hasNext())
+                {
+                    collectionNames.add(iterator.next());
+                }
+                collectionNames.removeAll(ignoreNames);
+                dbMetaData = analyzeAndGenerateMetadata(collectionNames);
+            }
+        }
+        return dbMetaData;
     }
 
     private static List<CollectionMetaData> analyzeAndGenerateMetadata(List<String> collectionNames) {

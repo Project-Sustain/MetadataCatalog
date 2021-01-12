@@ -5,5 +5,5 @@ package sustain.metadata.schema.output;
  */
 public enum Type {
 
-    NUMBER, STRING, ARRAY, OBJECTID, DATE;
+    NUMBER, STRING, ARRAY, OBJECTID, DATE, OBJECT;
 }

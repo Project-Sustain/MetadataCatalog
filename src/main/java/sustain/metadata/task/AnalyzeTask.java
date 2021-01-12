@@ -45,49 +45,21 @@ public class AnalyzeTask implements Callable<CollectionMetaData> {
 
     private List<FieldInfo> analyzeCollection()
     {
-
         try {
-
             ProcessBuilder processBuilder = new ProcessBuilder();
 
             // Run a shell command
             String dbAndCollection = PropertyLoader.getMongoDBDB() + "/" + collectionName;
             System.out.println("DB and Collection is :" + dbAndCollection);
-
-//            processBuilder.command("sh", "-c","mongo", PropertyLoader.getMongoDBDB(),"--host", PropertyLoader.getMongoDBHost(), "--quiet", "--eval", specialStr, "variety.js");
-//            processBuilder.command(new String[]{"python3", "script.py", PropertyLoader.getMongoDBDB(), PropertyLoader.getMongoDBHost(), "users"});
             processBuilder.command(new String[]{"python3", "script.py", dbAndCollection, PropertyLoader.getMongoDBHost(), PropertyLoader.getMongoDBPort()});
 
-            Process process = processBuilder.start();
-            System.out.println("Process started");
-
-            StringBuilder output = new StringBuilder();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
-                output.append("\n");
-            }
-
-            int subprocessExited = process.waitFor();
-            if (subprocessExited==0) {
-                System.out.println("Success!");
-                System.out.println(output);
-            } else {
-                //abnormal...
-                System.out.println("Failed to load for collection :" +collectionName);
-                //System.out.println(output);
-            }
-
-            System.out.println("Process waiting over");
+            String output = getOutput(processBuilder);
 
             ObjectMapper objectMapper = new ObjectMapper();
 
             TypeFactory typeFactory = objectMapper.getTypeFactory();
             CollectionType collectionType = typeFactory.constructCollectionType(List.class, FieldInfo.class);
-            List<FieldInfo> fieldInfoList = objectMapper.readValue(output.toString(), collectionType);
+            List<FieldInfo> fieldInfoList = objectMapper.readValue(output, collectionType);
             return fieldInfoList;
 
         } catch (IOException e) {
@@ -100,5 +72,33 @@ public class AnalyzeTask implements Callable<CollectionMetaData> {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private String getOutput(ProcessBuilder processBuilder) throws IOException, InterruptedException {
+
+        Process process = processBuilder.start();
+        System.out.println("Process started");
+        StringBuilder output = new StringBuilder();
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            output.append(line);
+            output.append("\n");
+        }
+
+        int subprocessExited = process.waitFor();
+        if (subprocessExited==0) {
+            System.out.println("Success!");
+            System.out.println(output);
+        } else {
+            //abnormal...
+            System.out.println("Failed to load for collection :" +collectionName);
+            //System.out.println(output);
+        }
+
+        System.out.println("Process waiting over");
+        return output.toString();
     }
 }

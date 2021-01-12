@@ -158,26 +158,35 @@ public class PropertyLoader {
             {
                 if(str.contains(collectionName + ":"))
                 {
-                    String[] splitArray = str.split(":");
-                    if(splitArray.length == 2 && splitArray[0].equals(collectionName))
+                    List<Pair<String, String>> returnList = returnInReqFormat(collectionName, str);
+                    if(returnList != null)
                     {
-                        final String[] split = splitArray[1].split("#");
-                        
-                        List<Pair<String,String>> returnList = new ArrayList<>();
-                        for( String pair : split )
-                        {
-                            String[] parentAndChild = pair.split(",");
-                            if(parentAndChild.length == 2)
-                            {
-                                returnList.add(new Pair<>(parentAndChild[0], parentAndChild[1]));
-                            }
-                        }
                         return returnList;
                     }
                 }
             }
         }
 
+        return null;
+    }
+
+    private static List<Pair<String, String>> returnInReqFormat(String collectionName, String str) {
+        String[] splitArray = str.split(":");
+        if(splitArray.length == 2 && splitArray[0].equals(collectionName))
+        {
+            final String[] split = splitArray[1].split("#");
+
+            List<Pair<String,String>> returnList = new ArrayList<>();
+            for( String pair : split )
+            {
+                String[] parentAndChild = pair.split(",");
+                if(parentAndChild.length == 2)
+                {
+                    returnList.add(new Pair<>(parentAndChild[0], parentAndChild[1]));
+                }
+            }
+            return returnList;
+        }
         return null;
     }
 }
