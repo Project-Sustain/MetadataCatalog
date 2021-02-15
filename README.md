@@ -57,3 +57,8 @@ Note: Do not change the contents of script.py
 Open a terminal and navigate to the directory in which the jar resides.
 Execute "java -jar <MetadataCatalog_jar_name>.jar"
 
+## How to import the metadata into database?
+
+Replace the placeholders of below command with appropriate values and run the command on a terminal.
+
+mongoimport --db <db_name> --collection <collection_name> --host <mongos_host_name> -j 8 --jsonArray --file "<json_file_name>"
