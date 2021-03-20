@@ -147,6 +147,8 @@ public class Constants {
     public final static String PROPERTY_KEY_COLLECTION_IGNORE_FIELDS = "collection_ignore_fields";
     public final static String PROPERTY_KEY_STRUCTURED_FIELDS = "structured_fields";
 
+    public final static String PROPERTY_KEY_PERCENTAGE_THRESHOLD = "percentage_threshold";
+
     //TODO
     public final static Integer ARRAY_TYPE_CHECK_DOCUMENT_LIMIT = 3;
     public final static Integer MAXIMUM_CATEGORICAL_VALUES = 500;

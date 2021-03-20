@@ -30,7 +30,7 @@ field in a collection in JSON format.
 
 Step 4: Within each iteration of Step 3, program reads the output from each command and a separate object is created, for each field in the collection.
 
-Step 5: Filter out the fields which have an existence of 100% (others are ignored).
+Step 5: Filter out the fields which have a presence of the configured "percentage.threshold" value (others are ignored). This value is configured in config.properties. If a NumberFormatException occurs, it will be set to 100%.
 
 Step 6: Connect to MongoDB via the MongoDB Java driver, and execute relevant queries for different data types.
 (Queries differ for String, Numeric, Array and Date field types)

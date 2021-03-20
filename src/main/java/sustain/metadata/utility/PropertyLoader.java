@@ -155,6 +155,7 @@ public class PropertyLoader {
         propertyValues.put(Constants.PROPERTY_KEY_IGNORED_COLLECTION_NAMES, prop.getProperty("ignore.collection.names"));
         propertyValues.put(Constants.PROPERTY_KEY_COLLECTION_IGNORE_FIELDS, prop.getProperty("ignore.collection.fields"));
         propertyValues.put(Constants.PROPERTY_KEY_STRUCTURED_FIELDS, prop.getProperty("structured.collection.fields"));
+        propertyValues.put(Constants.PROPERTY_KEY_PERCENTAGE_THRESHOLD, prop.getProperty("percentage.threshold"));
     }
 
     public static String getMongoDBHost() throws ValueNotFoundException
@@ -315,5 +316,22 @@ public class PropertyLoader {
             return returnList;
         }
         return null;
+    }
+
+    public static Long getPercentageThreshold() throws ValueNotFoundException
+    {
+        String percentage = propertyValues.get(Constants.PROPERTY_KEY_PERCENTAGE_THRESHOLD);
+
+        if(percentage != null)
+        {
+            try {
+                Long threshold = Long.valueOf(percentage);
+                return threshold;
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                return 100L;
+            }
+        }
+        throw new ValueNotFoundException("MongoDB host not found");
     }
 }

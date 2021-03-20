@@ -159,10 +159,11 @@ public class AnalyzeTask implements Callable<CollectionMetaData> {
         List<FieldInfo> fieldInfoList = analyzeCollection();
         CollectionMetaData fieldDetails = null;
 
+        Long percentageToCheck = PropertyLoader.getPercentageThreshold();
         if(fieldInfoList != null)
         {
-            // filter out fields with 100% presence, others are ignored
-            List<FieldInfo> validFieldList = fieldInfoList.stream().filter(x -> x.getPercentContaining() == 100L).collect(Collectors.toList());
+            // filter out fields with a presence of percentageToCheck% or more, others are ignored
+            List<FieldInfo> validFieldList = fieldInfoList.stream().filter(x -> x.getPercentContaining() >= percentageToCheck).collect(Collectors.toList());
             Connector connector = new Connector();
             fieldDetails = connector.getFieldDetails(collectionName, validFieldList);
         }
