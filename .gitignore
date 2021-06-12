@@ -132,3 +132,5 @@ hs_err_pid*
 /config.properties
 
 /.idea/
+
+import.js
