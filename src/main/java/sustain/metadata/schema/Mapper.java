@@ -231,9 +231,15 @@ public class Mapper {
         FieldMetadata fieldMetadata = new FieldMetadata();
         fieldMetadata.setName(fieldInfo.getId().getKey());
         fieldMetadata.setType(getType(fieldInfo.getValue().getTypes()));
-
-        long max = (long) resultDoc.get(Constants.MAXIMUM_NUMBER);
-        long min = (long) resultDoc.get(Constants.MINIMUM_NUMBER);
+        long min, max;
+        if(resultDoc.get(Constants.MAXIMUM_NUMBER).getClass() == java.lang.Long.class){
+            max = (long) resultDoc.get(Constants.MAXIMUM_NUMBER);
+            min = (long) resultDoc.get(Constants.MINIMUM_NUMBER);
+        }
+        else{
+            max = ((org.bson.types.Decimal128) resultDoc.get(Constants.MAXIMUM_NUMBER)).longValue();
+            min = ((org.bson.types.Decimal128) resultDoc.get(Constants.MINIMUM_NUMBER)).longValue();
+        }
         fieldMetadata.setMaxDate(max);
         fieldMetadata.setMinDate(min);
 
