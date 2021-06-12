@@ -232,9 +232,12 @@ public class FieldDetailTask implements Runnable {
         {
             processArrayType(fieldName, typeTask);
         }
-        else if(type.getObject() != null && fieldName.equals("epoch_time"))
+        else if(fieldName.equals("epoch_time"))
         {
             processObjectType(fieldName, typeTask);
+        }
+        else{
+            System.out.println(fieldName + " is NOT going to be processed");
         }
     }
 

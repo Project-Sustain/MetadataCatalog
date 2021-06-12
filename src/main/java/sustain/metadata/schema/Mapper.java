@@ -142,7 +142,7 @@ import java.util.Map;
 public class Mapper {
 
     public static void mapNumericMetaInfo(CollectionMetaData collectionMetaData, Document resultDoc, FieldInfo fieldInfo) {
-
+        //System.out.println("Here is: " + fieldInfo.getId().getKey() + " which is Numeric");
         FieldMetadata fieldMetadata = new FieldMetadata();
         fieldMetadata.setName(fieldInfo.getId().getKey());
         fieldMetadata.setType(getType(fieldInfo.getValue().getTypes()));
@@ -232,8 +232,8 @@ public class Mapper {
         fieldMetadata.setName(fieldInfo.getId().getKey());
         fieldMetadata.setType(getType(fieldInfo.getValue().getTypes()));
 
-        long max = ((org.bson.types.Decimal128) resultDoc.get(Constants.MAXIMUM_NUMBER)).longValue();
-        long min = ((org.bson.types.Decimal128) resultDoc.get(Constants.MINIMUM_NUMBER)).longValue();
+        long max = (long) resultDoc.get(Constants.MAXIMUM_NUMBER);
+        long min = (long) resultDoc.get(Constants.MINIMUM_NUMBER);
         fieldMetadata.setMaxDate(max);
         fieldMetadata.setMinDate(min);
 
